@@ -1,0 +1,7 @@
+[package]
+name = "linmath"
+version = "0.1.0"
+authors = ["Bernhard Fritz <bernhard.e.fritz@gmail.com>"]
+edition = "2018"
+
+[dependencies]
