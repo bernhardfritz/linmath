@@ -1,12 +1,6 @@
 use std::ops::{Add, AddAssign, Sub, SubAssign, Mul, MulAssign};
 use crate::vector::*;
 
-// TODO: since column vectors are immutable, create row vectors when calling new
-// TODO: this means matrices should only be created with new
-// TODO: maybe this allows to easier transpose and multiply, maybe even macro
-
-// TODO: inverse of matrix
-
 macro_rules! generate_matrix_n {
     ($MatrixN: ident, $VectorN: ident, $($field: ident),+) => {
         #[derive(Copy, Clone, Debug, PartialEq)]
