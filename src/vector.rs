@@ -1,4 +1,5 @@
 use std::ops::{Add, AddAssign, Sub, SubAssign, Mul, MulAssign};
+use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 
 macro_rules! sum {
     ($h:expr) => ($h);
@@ -56,6 +57,38 @@ macro_rules! generate_vector_n {
             #[inline]
             fn from(scalar: f64) -> Self {
                 $VectorN { $($field: scalar),+ }
+            }
+        }
+
+        impl AbsDiffEq for $VectorN {
+            type Epsilon = f64;
+
+            fn default_epsilon() -> Self::Epsilon {
+                f64::default_epsilon()
+            }
+
+            fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
+                $(f64::abs_diff_eq(&self.$field, &other.$field, epsilon))&&+
+            }
+        }
+
+        impl RelativeEq for $VectorN {
+            fn default_max_relative() -> Self::Epsilon {
+                f64::default_max_relative()
+            }
+
+            fn relative_eq(&self, other: &Self, epsilon: Self::Epsilon, max_relative: Self::Epsilon) -> bool {
+                $(f64::relative_eq(&self.$field, &other.$field, epsilon, max_relative))&&+
+            }
+        }
+
+        impl UlpsEq for $VectorN {
+            fn default_max_ulps() -> u32 {
+                f64::default_max_ulps()
+            }
+
+            fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
+                $(f64::ulps_eq(&self.$field, &other.$field, epsilon, max_ulps))&&+
             }
         }
     };

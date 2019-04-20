@@ -4,3 +4,8 @@ pub use crate::matrix::*;
 mod macros;
 mod vector;
 mod matrix;
+#[cfg(test)]
+#[macro_use]
+extern crate approx;
+#[cfg(not(test))]
+extern crate approx;

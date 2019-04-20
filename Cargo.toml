@@ -5,3 +5,4 @@ authors = ["Bernhard Fritz <bernhard.e.fritz@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+approx = "0.3.2"

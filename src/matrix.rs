@@ -1,4 +1,6 @@
 use std::ops::{Add, AddAssign, Sub, SubAssign, Mul, MulAssign};
+#[cfg(test)]
+use std::f64::consts::FRAC_PI_2;
 use crate::vector::*;
 
 macro_rules! generate_matrix_n {
@@ -153,6 +155,33 @@ impl Matrix3 {
             Some(invdet * adj)
         }
     }
+
+    #[inline]
+    pub fn translate(v: &Vector2) -> Matrix3 {
+        Matrix3::new(
+            Vector3::new(1.0, 0.0, 0.0),
+            Vector3::new(0.0, 1.0, 0.0),
+            Vector3::new(v.x, v.y, 1.0),
+        )
+    }
+
+    #[inline]
+    pub fn rotate(rad: f64) -> Matrix3 {
+        Matrix3::new(
+            Vector3::new(rad.cos(), rad.sin(), 0.0),
+            Vector3::new(-rad.sin(), rad.cos(), 0.0),
+            Vector3::new(0.0, 0.0, 1.0),
+        )
+    }
+
+    #[inline]
+    pub fn scale(v: &Vector2) -> Matrix3 {
+        Matrix3::new(
+            Vector3::new(v.x, 0.0, 0.0),
+            Vector3::new(0.0, v.y, 0.0),
+            Vector3::new(0.0, 0.0, 1.0),
+        )
+    }
 }
 
 impl From<f64> for Matrix3 {
@@ -234,6 +263,56 @@ impl Matrix4 {
             let adj = Matrix4::adjugate(&m);
             Some(invdet * adj)
         }
+    }
+
+    #[inline]
+    pub fn translate(v: &Vector3) -> Matrix4 {
+        Matrix4::new(
+            Vector4::new(1.0, 0.0, 0.0, 0.0),
+            Vector4::new(0.0, 1.0, 0.0, 0.0),
+            Vector4::new(0.0, 0.0, 1.0, 0.0),
+            Vector4::new(v.x, v.y, v.z, 1.0),
+        )
+    }
+
+    #[inline]
+    pub fn rotate_x(rad: f64) -> Matrix4 {
+        Matrix4::new(
+            Vector4::new(1.0, 0.0, 0.0, 0.0),
+            Vector4::new(0.0, rad.cos(), rad.sin(), 0.0),
+            Vector4::new(0.0, -rad.sin(), rad.cos(), 0.0),
+            Vector4::new(0.0, 0.0, 0.0, 1.0),
+        )
+    }
+
+    #[inline]
+    pub fn rotate_y(rad: f64) -> Matrix4 {
+        Matrix4::new(
+            Vector4::new(rad.cos(), 0.0, -rad.sin(), 0.0),
+            Vector4::new(0.0, 1.0, 0.0, 0.0),
+            Vector4::new(rad.sin(), 0.0, rad.cos(), 0.0),
+            Vector4::new(0.0, 0.0, 0.0, 1.0),
+        )
+    }
+
+    #[inline]
+    pub fn rotate_z(rad: f64) -> Matrix4 {
+        Matrix4::new(
+            Vector4::new(rad.cos(), rad.sin(), 0.0, 0.0),
+            Vector4::new(-rad.sin(), rad.cos(), 0.0, 0.0),
+            Vector4::new(0.0, 0.0, 1.0, 0.0),
+            Vector4::new(0.0, 0.0, 0.0, 1.0),
+        )
+    }
+
+    #[inline]
+    pub fn scale(v: &Vector3) -> Matrix4 {
+        Matrix4::new(
+            Vector4::new(v.x, 0.0, 0.0, 0.0),
+            Vector4::new(0.0, v.y, 0.0, 0.0),
+            Vector4::new(0.0, 0.0, v.z, 0.0),
+            Vector4::new(0.0, 0.0, 0.0, 1.0),
+        )
     }
 }
 
@@ -410,6 +489,33 @@ mod tests {
     }
 
     #[test]
+    fn matrix3_translate() {
+        let t = Matrix3::translate(&Vector2::new(1.0, 0.0));
+        let p = Vector3::new(0.0, 0.0, 1.0); // position
+        let d = Vector3::new(1.0, 0.0, 0.0); // direction
+        assert_eq!(t * p, Vector3::new(1.0, 0.0, 1.0));
+        assert_eq!(t * d, Vector3::new(1.0, 0.0, 0.0));
+    }
+
+    #[test]
+    fn matrix3_rotate() {
+        let r = Matrix3::rotate(FRAC_PI_2);
+        let p = Vector3::new(1.0, 0.0, 1.0); // position
+        let d = Vector3::new(1.0, 0.0, 0.0); // direction
+        assert_ulps_eq!(r * p, Vector3::new(0.0, 1.0, 1.0));
+        assert_ulps_eq!(r * d, Vector3::new(0.0, 1.0, 0.0));
+    }
+
+    #[test]
+    fn matrix3_scale() {
+        let s = Matrix3::scale(&Vector2::new(2.0, 1.0));
+        let p = Vector3::new(1.0, 0.0, 1.0); // position
+        let d = Vector3::new(1.0, 0.0, 0.0); // direction
+        assert_eq!(s * p, Vector3::new(2.0, 0.0, 1.0));
+        assert_eq!(s * d, Vector3::new(2.0, 0.0, 0.0));
+    }
+
+    #[test]
     fn matrix4_add() {
         let a = Matrix4::new(Vector4::new(1.0, 2.0, 3.0, 4.0), Vector4::new(5.0, 6.0, 7.0, 8.0), Vector4::new(9.0, 10.0, 11.0, 12.0), Vector4::new(13.0, 14.0, 15.0, 16.0));
         let b = Matrix4::new(Vector4::new(17.0, 18.0, 19.0, 20.0), Vector4::new(21.0, 22.0, 23.0, 24.0), Vector4::new(25.0, 26.0, 27.0, 28.0), Vector4::new(29.0, 30.0, 31.0, 32.0));
@@ -469,5 +575,50 @@ mod tests {
         } else {
             assert!(false)
         }
+    }
+
+    #[test]
+    fn matrix4_translate() {
+        let t = Matrix4::translate(&Vector3::new(1.0, 0.0, 0.0));
+        let p = Vector4::new(0.0, 0.0, 0.0, 1.0); // position
+        let d = Vector4::new(1.0, 0.0, 0.0, 0.0); // direction
+        assert_eq!(t * p, Vector4::new(1.0, 0.0, 0.0, 1.0));
+        assert_eq!(t * d, Vector4::new(1.0, 0.0, 0.0, 0.0));
+    }
+
+    #[test]
+    fn matrix4_rotate_x() {
+        let r = Matrix4::rotate_x(FRAC_PI_2);
+        let p = Vector4::new(0.0, 1.0, 0.0, 1.0); // position
+        let d = Vector4::new(0.0, 1.0, 0.0, 0.0); // direction
+        assert_ulps_eq!(r * p, Vector4::new(0.0, 0.0, 1.0, 1.0));
+        assert_ulps_eq!(r * d, Vector4::new(0.0, 0.0, 1.0, 0.0));
+    }
+
+    #[test]
+    fn matrix4_rotate_y() {
+        let r = Matrix4::rotate_y(FRAC_PI_2);
+        let p = Vector4::new(1.0, 0.0, 0.0, 1.0); // position
+        let d = Vector4::new(1.0, 0.0, 0.0, 0.0); // direction
+        assert_ulps_eq!(r * p, Vector4::new(0.0, 0.0, -1.0, 1.0));
+        assert_ulps_eq!(r * d, Vector4::new(0.0, 0.0, -1.0, 0.0));
+    }
+
+    #[test]
+    fn matrix4_rotate_z() {
+        let r = Matrix4::rotate_z(FRAC_PI_2);
+        let p = Vector4::new(1.0, 0.0, 0.0, 1.0); // position
+        let d = Vector4::new(1.0, 0.0, 0.0, 0.0); // direction
+        assert_ulps_eq!(r * p, Vector4::new(0.0, 1.0, 0.0, 1.0));
+        assert_ulps_eq!(r * d, Vector4::new(0.0, 1.0, 0.0, 0.0));
+    }
+
+    #[test]
+    fn matrix4_scale() {
+        let s = Matrix4::scale(&Vector3::new(2.0, 1.0, 1.0));
+        let p = Vector4::new(1.0, 0.0, 0.0, 1.0); // position
+        let d = Vector4::new(1.0, 0.0, 0.0, 0.0); // direction
+        assert_eq!(s * p, Vector4::new(2.0, 0.0, 0.0, 1.0));
+        assert_eq!(s * d, Vector4::new(2.0, 0.0, 0.0, 0.0));
     }
 }
