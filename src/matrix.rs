@@ -1,57 +1,112 @@
 use std::ops::{Add, AddAssign, Sub, SubAssign, Mul, MulAssign};
 #[cfg(test)]
 use std::f64::consts::FRAC_PI_2;
+use num_traits::Float;
 use crate::vector::*;
 
 macro_rules! generate_matrix_n {
     ($MatrixN: ident, $VectorN: ident, $($field: ident),+) => {
         #[derive(Copy, Clone, Debug, PartialEq)]
-        pub struct $MatrixN {
-            $(pub $field: $VectorN),+
+        pub struct $MatrixN<T: Float> {
+            $(pub $field: $VectorN<T>),+
         }
 
-        impl $MatrixN {
+        impl<T: Float> $MatrixN<T> {
             #[inline]
-            pub fn new($($field: $VectorN),+) -> $MatrixN {
+            pub fn new($($field: $VectorN<T>),+) -> $MatrixN<T> {
                 $MatrixN { $($field: $field),+ }
             }
 
             #[inline]
-            fn add_matrix_and_matrix(a: &$MatrixN, b: &$MatrixN) -> $MatrixN {
+            fn add_matrix_and_matrix(a: &$MatrixN<T>, b: &$MatrixN<T>) -> $MatrixN<T> {
                 $MatrixN::new($(a.$field + b.$field),+)
             }
 
             #[inline]
-            fn sub_matrix_and_matrix(a: &$MatrixN, b: &$MatrixN) -> $MatrixN {
+            fn sub_matrix_and_matrix(a: &$MatrixN<T>, b: &$MatrixN<T>) -> $MatrixN<T> {
                 $MatrixN::new($(a.$field - b.$field),+)
             }
 
-            fn mul_matrix_and_vector(a: &$MatrixN, b: &$VectorN) -> $VectorN {
+            fn mul_matrix_and_vector(a: &$MatrixN<T>, b: &$VectorN<T>) -> $VectorN<T> {
                 let t = $MatrixN::transpose(&a);
                 $VectorN::new($($VectorN::dot(&t.$field, &b)),+)
             }
 
             #[inline]
-            fn mul_matrix_and_scalar(a: &$MatrixN, b: &f64) -> $MatrixN {
+            fn mul_matrix_and_scalar(a: &$MatrixN<T>, b: &T) -> $MatrixN<T> {
                 $MatrixN::new($(a.$field * *b),+)
-            }
-
-            #[inline]
-            fn mul_scalar_and_matrix(a: &f64, b: &$MatrixN) -> $MatrixN {
-                $MatrixN::new($(*a * b.$field),+)
             }
         }
 
-        overload_arithmetic_operator!(Add, $MatrixN, $MatrixN, $MatrixN, add, $MatrixN::add_matrix_and_matrix);
-        overload_arithmetic_operator!(Sub, $MatrixN, $MatrixN, $MatrixN, sub, $MatrixN::sub_matrix_and_matrix);
-        overload_arithmetic_operator!(Mul, $MatrixN, $MatrixN, $MatrixN, mul, $MatrixN::mul_matrix_and_matrix);
-        overload_arithmetic_operator!(Mul, $MatrixN, $VectorN, $VectorN, mul, $MatrixN::mul_matrix_and_vector);
-        overload_arithmetic_operator!(Mul, $MatrixN, f64, $MatrixN, mul, $MatrixN::mul_matrix_and_scalar);
-        overload_arithmetic_operator!(Mul, f64, $MatrixN, $MatrixN, mul, $MatrixN::mul_scalar_and_matrix);
-        overload_compound_assignment_operator!(AddAssign, $MatrixN, $MatrixN, add_assign, $MatrixN::add_matrix_and_matrix);
-        overload_compound_assignment_operator!(SubAssign, $MatrixN, $MatrixN, sub_assign, $MatrixN::sub_matrix_and_matrix);
-        overload_compound_assignment_operator!(MulAssign, $MatrixN, $MatrixN, mul_assign, $MatrixN::mul_matrix_and_matrix);
-        overload_compound_assignment_operator!(MulAssign, $MatrixN, f64, mul_assign, $MatrixN::mul_matrix_and_scalar);
+        impl<T: Float> Add<$MatrixN<T>> for $MatrixN<T> {
+            type Output = $MatrixN<T>;
+
+            #[inline]
+            fn add(self, rhs: $MatrixN<T>) -> Self::Output {
+                $MatrixN::add_matrix_and_matrix(&self, &rhs)
+            }
+        }
+
+        impl<T: Float> Sub<$MatrixN<T>> for $MatrixN<T> {
+            type Output = $MatrixN<T>;
+
+            #[inline]
+            fn sub(self, rhs: $MatrixN<T>) -> Self::Output {
+                $MatrixN::sub_matrix_and_matrix(&self, &rhs)
+            }
+        }
+
+        impl<T: Float> Mul<$MatrixN<T>> for $MatrixN<T> {
+            type Output = $MatrixN<T>;
+
+            fn mul(self, rhs: $MatrixN<T>) -> Self::Output {
+                $MatrixN::mul_matrix_and_matrix(&self, &rhs)
+            }
+        }
+
+        impl<T: Float> Mul<$VectorN<T>> for $MatrixN<T> {
+            type Output = $VectorN<T>;
+
+            fn mul(self, rhs: $VectorN<T>) -> Self::Output {
+                $MatrixN::mul_matrix_and_vector(&self, &rhs)
+            }
+        }
+
+        impl<T: Float> Mul<T> for $MatrixN<T> {
+            type Output = $MatrixN<T>;
+
+            #[inline]
+            fn mul(self, rhs: T) -> Self::Output {
+                $MatrixN::mul_matrix_and_scalar(&self, &rhs)
+            }
+        }
+
+        impl<T: Float> AddAssign<$MatrixN<T>> for $MatrixN<T> {
+            #[inline]
+            fn add_assign(&mut self, rhs: $MatrixN<T>) {
+                *self = $MatrixN::add_matrix_and_matrix(self, &rhs)
+            }
+        }
+
+        impl<T: Float> SubAssign<$MatrixN<T>> for $MatrixN<T> {
+            #[inline]
+            fn sub_assign(&mut self, rhs: $MatrixN<T>) {
+                *self = $MatrixN::sub_matrix_and_matrix(self, &rhs)
+            }
+        }
+
+        impl<T: Float> MulAssign<$MatrixN<T>> for $MatrixN<T> {
+            fn mul_assign(&mut self, rhs: $MatrixN<T>) {
+                *self = $MatrixN::mul_matrix_and_matrix(self, &rhs)
+            }
+        }
+
+        impl<T: Float> MulAssign<T> for $MatrixN<T> {
+            #[inline]
+            fn mul_assign(&mut self, rhs: T) {
+                *self = $MatrixN::mul_matrix_and_scalar(self, &rhs)
+            }
+        }
     };
 }
 
@@ -59,8 +114,8 @@ generate_matrix_n!(Matrix2, Vector2, x, y);
 generate_matrix_n!(Matrix3, Vector3, x, y, z);
 generate_matrix_n!(Matrix4, Vector4, x, y, z, w);
 
-impl Matrix2 {
-    fn mul_matrix_and_matrix(a: &Matrix2, b: &Matrix2) -> Matrix2 {
+impl<T: Float> Matrix2<T> {
+    fn mul_matrix_and_matrix(a: &Matrix2<T>, b: &Matrix2<T>) -> Matrix2<T> {
         let t = Matrix2::transpose(a);
         Matrix2::new(
             Vector2::new(Vector2::dot(&t.x, &b.x), Vector2::dot(&t.y, &b.x)),
@@ -69,7 +124,15 @@ impl Matrix2 {
     }
 
     #[inline]
-    pub fn transpose(m: &Matrix2) -> Matrix2 {
+    pub fn identity() -> Matrix2<T> {
+        Matrix2::new(
+            Vector2::new(T::one(), T::zero()),
+            Vector2::new(T::zero(), T::one()),
+        )
+    }
+
+    #[inline]
+    pub fn transpose(m: &Matrix2<T>) -> Matrix2<T> {
         Matrix2::new(
             Vector2::new(m.x.x, m.y.x),
             Vector2::new(m.x.y, m.y.y),
@@ -77,42 +140,32 @@ impl Matrix2 {
     }
 
     #[inline]
-    pub fn determinant(m: &Matrix2) -> f64 {
+    pub fn determinant(m: &Matrix2<T>) -> T {
         m.x.x * m.y.y - m.x.y * m.y.x
     }
 
     #[inline]
-    pub fn adjugate(m: &Matrix2) -> Matrix2 {
+    pub fn adjugate(m: &Matrix2<T>) -> Matrix2<T> {
         Matrix2::new(
             Vector2::new(m.y.y, -m.x.y),
             Vector2::new(-m.y.x, m.x.x),
         )
     }
 
-    pub fn inverse(m: &Matrix2) -> Option<Matrix2> {
+    pub fn inverse(m: &Matrix2<T>) -> Option<Matrix2<T>> {
         let det = Matrix2::determinant(&m);
-        if det == 0.0 {
+        if det == T::zero() {
             None
         } else {
-            let invdet = 1.0 / det;
+            let invdet = T::one() / det;
             let adj = Matrix2::adjugate(m);
-            Some(invdet * adj)
+            Some(adj * invdet)
         }
     }
 }
 
-impl From<f64> for Matrix2 {
-    #[inline]
-    fn from(scalar: f64) -> Self {
-        Matrix2::new(
-            Vector2::new(scalar, 0.0),
-            Vector2::new(0.0, scalar),
-        )
-    }
-}
-
-impl Matrix3 {
-    fn mul_matrix_and_matrix(a: &Matrix3, b: &Matrix3) -> Matrix3 {
+impl<T: Float> Matrix3<T> {
+    fn mul_matrix_and_matrix(a: &Matrix3<T>, b: &Matrix3<T>) -> Matrix3<T> {
         let t = Matrix3::transpose(a);
         Matrix3::new(
             Vector3::new(Vector3::dot(&t.x, &b.x), Vector3::dot(&t.y, &b.x), Vector3::dot(&t.z, &b.x)),
@@ -122,7 +175,16 @@ impl Matrix3 {
     }
 
     #[inline]
-    pub fn transpose(m: &Matrix3) -> Matrix3 {
+    pub fn identity() -> Matrix3<T> {
+        Matrix3::new(
+            Vector3::new(T::one(), T::zero(), T::zero()),
+            Vector3::new(T::zero(), T::one(), T::zero()),
+            Vector3::new(T::zero(), T::zero(), T::one()),
+        )
+    }
+
+    #[inline]
+    pub fn transpose(m: &Matrix3<T>) -> Matrix3<T> {
         Matrix3::new(
             Vector3::new(m.x.x, m.y.x, m.z.x),
             Vector3::new(m.x.y, m.y.y, m.z.y),
@@ -130,13 +192,13 @@ impl Matrix3 {
         )
     }
 
-    pub fn determinant(m: &Matrix3) -> f64 {
+    pub fn determinant(m: &Matrix3<T>) -> T {
         let t = Matrix3::transpose(&m);
         let c = Vector3::cross(&t.x, &t.y);
         Vector3::dot(&c, &t.z)
     }
 
-    fn adjugate(m: &Matrix3) -> Matrix3 {
+    fn adjugate(m: &Matrix3<T>) -> Matrix3<T> {
         let t = Matrix3::transpose(&m);
         Matrix3::new(
             Vector3::cross(&t.y, &t.z),
@@ -145,58 +207,47 @@ impl Matrix3 {
         )
     }
 
-    pub fn inverse(m: &Matrix3) -> Option<Matrix3> {
+    pub fn inverse(m: &Matrix3<T>) -> Option<Matrix3<T>> {
         let det = Matrix3::determinant(&m);
-        if det == 0.0 {
+        if det == T::zero() {
             None
         } else {
-            let invdet = 1.0 / det;
+            let invdet = T::one() / det;
             let adj = Matrix3::adjugate(&m);
-            Some(invdet * adj)
+            Some(adj * invdet)
         }
     }
 
     #[inline]
-    pub fn translate(v: &Vector2) -> Matrix3 {
+    pub fn translate(v: &Vector2<T>) -> Matrix3<T> {
         Matrix3::new(
-            Vector3::new(1.0, 0.0, 0.0),
-            Vector3::new(0.0, 1.0, 0.0),
-            Vector3::new(v.x, v.y, 1.0),
+            Vector3::new(T::one(), T::zero(), T::zero()),
+            Vector3::new(T::zero(), T::one(), T::zero()),
+            Vector3::new(v.x, v.y, T::one()),
+        )
+    }
+
+    pub fn rotate(rad: T) -> Matrix3<T> {
+        let (s, c) = rad.sin_cos();
+        Matrix3::new(
+            Vector3::new(c, s, T::zero()),
+            Vector3::new(-s, c, T::zero()),
+            Vector3::new(T::zero(), T::zero(), T::one()),
         )
     }
 
     #[inline]
-    pub fn rotate(rad: f64) -> Matrix3 {
+    pub fn scale(v: &Vector2<T>) -> Matrix3<T> {
         Matrix3::new(
-            Vector3::new(rad.cos(), rad.sin(), 0.0),
-            Vector3::new(-rad.sin(), rad.cos(), 0.0),
-            Vector3::new(0.0, 0.0, 1.0),
-        )
-    }
-
-    #[inline]
-    pub fn scale(v: &Vector2) -> Matrix3 {
-        Matrix3::new(
-            Vector3::new(v.x, 0.0, 0.0),
-            Vector3::new(0.0, v.y, 0.0),
-            Vector3::new(0.0, 0.0, 1.0),
+            Vector3::new(v.x, T::zero(), T::zero()),
+            Vector3::new(T::zero(), v.y, T::zero()),
+            Vector3::new(T::zero(), T::zero(), T::one()),
         )
     }
 }
 
-impl From<f64> for Matrix3 {
-    #[inline]
-    fn from(scalar: f64) -> Self {
-        Matrix3::new(
-            Vector3::new(scalar, 0.0, 0.0),
-            Vector3::new(0.0, scalar, 0.0),
-            Vector3::new(0.0, 0.0, scalar),
-        )
-    }
-}
-
-impl Matrix4 {
-    fn mul_matrix_and_matrix(a: &Matrix4, b: &Matrix4) -> Matrix4 {
+impl<T: Float> Matrix4<T> {
+    fn mul_matrix_and_matrix(a: &Matrix4<T>, b: &Matrix4<T>) -> Matrix4<T> {
         let t = Matrix4::transpose(a);
         Matrix4::new(
             Vector4::new(Vector4::dot(&t.x, &b.x), Vector4::dot(&t.y, &b.x), Vector4::dot(&t.z, &b.x), Vector4::dot(&t.w, &b.x)),
@@ -207,7 +258,17 @@ impl Matrix4 {
     }
 
     #[inline]
-    pub fn transpose(m: &Matrix4) -> Matrix4 {
+    pub fn identity() -> Matrix4<T> {
+        Matrix4::new(
+            Vector4::new(T::one(), T::zero(), T::zero(), T::zero()),
+            Vector4::new(T::zero(), T::one(), T::zero(), T::zero()),
+            Vector4::new(T::zero(), T::zero(), T::one(), T::zero()),
+            Vector4::new(T::zero(), T::zero(), T::zero(), T::one()),
+        )
+    }
+
+    #[inline]
+    pub fn transpose(m: &Matrix4<T>) -> Matrix4<T> {
         Matrix4::new(
             Vector4::new(m.x.x, m.y.x, m.z.x, m.w.x),
             Vector4::new(m.x.y, m.y.y, m.z.y, m.w.y),
@@ -216,7 +277,7 @@ impl Matrix4 {
         )
     }
 
-    pub fn determinant(m: &Matrix4) -> f64 {
+    pub fn determinant(m: &Matrix4<T>) -> T {
         let a = Matrix3::new(Vector3::new(m.y.y, m.y.z, m.y.w), Vector3::new(m.z.y, m.z.z, m.z.w), Vector3::new(m.w.y, m.w.z, m.w.w));
         let b = Matrix3::new(Vector3::new(m.x.y, m.x.z, m.x.w), Vector3::new(m.z.y, m.z.z, m.z.w), Vector3::new(m.w.y, m.w.z, m.w.w));
         let c = Matrix3::new(Vector3::new(m.x.y, m.x.z, m.x.w), Vector3::new(m.y.y, m.y.z, m.y.w), Vector3::new(m.w.y, m.w.z, m.w.w));
@@ -224,7 +285,7 @@ impl Matrix4 {
         m.x.x * Matrix3::determinant(&a) - m.y.x * Matrix3::determinant(&b) + m.z.x * Matrix3::determinant(&c) - m.w.x * Matrix3::determinant(&d)
     }
 
-    fn comatrix(m: &Matrix4) -> Matrix4 {
+    fn comatrix(m: &Matrix4<T>) -> Matrix4<T> {
         let c00 = Matrix3::new(Vector3::new(m.y.y, m.y.z, m.y.w), Vector3::new(m.z.y, m.z.z, m.z.w), Vector3::new(m.w.y, m.w.z, m.w.w));
         let c01 = Matrix3::new(Vector3::new(m.x.y, m.x.z, m.x.w), Vector3::new(m.z.y, m.z.z, m.z.w), Vector3::new(m.w.y, m.w.z, m.w.w));
         let c02 = Matrix3::new(Vector3::new(m.x.y, m.x.z, m.x.w), Vector3::new(m.y.y, m.y.z, m.y.w), Vector3::new(m.w.y, m.w.z, m.w.w));
@@ -249,81 +310,69 @@ impl Matrix4 {
         )
     }
 
-    fn adjugate(m: &Matrix4) -> Matrix4 {
+    fn adjugate(m: &Matrix4<T>) -> Matrix4<T> {
         let c = Matrix4::comatrix(&m);
         Matrix4::transpose(&c)
     }
 
-    pub fn inverse(m: &Matrix4) -> Option<Matrix4> {
+    pub fn inverse(m: &Matrix4<T>) -> Option<Matrix4<T>> {
         let det = Matrix4::determinant(&m);
-        if det == 0.0 {
+        if det == T::zero() {
             None
         } else {
-            let invdet = 1.0 / det;
+            let invdet = T::one() / det;
             let adj = Matrix4::adjugate(&m);
-            Some(invdet * adj)
+            Some(adj * invdet)
         }
     }
 
     #[inline]
-    pub fn translate(v: &Vector3) -> Matrix4 {
+    pub fn translate(v: &Vector3<T>) -> Matrix4<T> {
         Matrix4::new(
-            Vector4::new(1.0, 0.0, 0.0, 0.0),
-            Vector4::new(0.0, 1.0, 0.0, 0.0),
-            Vector4::new(0.0, 0.0, 1.0, 0.0),
-            Vector4::new(v.x, v.y, v.z, 1.0),
+            Vector4::new(T::one(), T::zero(), T::zero(), T::zero()),
+            Vector4::new(T::zero(), T::one(), T::zero(), T::zero()),
+            Vector4::new(T::zero(), T::zero(), T::one(), T::zero()),
+            Vector4::new(v.x, v.y, v.z, T::one()),
+        )
+    }
+
+    pub fn rotate_x(rad: T) -> Matrix4<T> {
+        let (s, c) = rad.sin_cos();
+        Matrix4::new(
+            Vector4::new(T::one(), T::zero(), T::zero(), T::zero()),
+            Vector4::new(T::zero(), c, s, T::zero()),
+            Vector4::new(T::zero(), -s, c, T::zero()),
+            Vector4::new(T::zero(), T::zero(), T::zero(), T::one()),
+        )
+    }
+
+    pub fn rotate_y(rad: T) -> Matrix4<T> {
+        let (s, c) = rad.sin_cos();
+        Matrix4::new(
+            Vector4::new(c, T::zero(), -s, T::zero()),
+            Vector4::new(T::zero(), T::one(), T::zero(), T::zero()),
+            Vector4::new(s, T::zero(), c, T::zero()),
+            Vector4::new(T::zero(), T::zero(), T::zero(), T::one()),
+        )
+    }
+
+    pub fn rotate_z(rad: T) -> Matrix4<T> {
+        let (s, c) = rad.sin_cos();
+        Matrix4::new(
+            Vector4::new(c, s, T::zero(), T::zero()),
+            Vector4::new(-s, c, T::zero(), T::zero()),
+            Vector4::new(T::zero(), T::zero(), T::one(), T::zero()),
+            Vector4::new(T::zero(), T::zero(), T::zero(), T::one()),
         )
     }
 
     #[inline]
-    pub fn rotate_x(rad: f64) -> Matrix4 {
+    pub fn scale(v: &Vector3<T>) -> Matrix4<T> {
         Matrix4::new(
-            Vector4::new(1.0, 0.0, 0.0, 0.0),
-            Vector4::new(0.0, rad.cos(), rad.sin(), 0.0),
-            Vector4::new(0.0, -rad.sin(), rad.cos(), 0.0),
-            Vector4::new(0.0, 0.0, 0.0, 1.0),
-        )
-    }
-
-    #[inline]
-    pub fn rotate_y(rad: f64) -> Matrix4 {
-        Matrix4::new(
-            Vector4::new(rad.cos(), 0.0, -rad.sin(), 0.0),
-            Vector4::new(0.0, 1.0, 0.0, 0.0),
-            Vector4::new(rad.sin(), 0.0, rad.cos(), 0.0),
-            Vector4::new(0.0, 0.0, 0.0, 1.0),
-        )
-    }
-
-    #[inline]
-    pub fn rotate_z(rad: f64) -> Matrix4 {
-        Matrix4::new(
-            Vector4::new(rad.cos(), rad.sin(), 0.0, 0.0),
-            Vector4::new(-rad.sin(), rad.cos(), 0.0, 0.0),
-            Vector4::new(0.0, 0.0, 1.0, 0.0),
-            Vector4::new(0.0, 0.0, 0.0, 1.0),
-        )
-    }
-
-    #[inline]
-    pub fn scale(v: &Vector3) -> Matrix4 {
-        Matrix4::new(
-            Vector4::new(v.x, 0.0, 0.0, 0.0),
-            Vector4::new(0.0, v.y, 0.0, 0.0),
-            Vector4::new(0.0, 0.0, v.z, 0.0),
-            Vector4::new(0.0, 0.0, 0.0, 1.0),
-        )
-    }
-}
-
-impl From<f64> for Matrix4 {
-    #[inline]
-    fn from(scalar: f64) -> Self {
-        Matrix4::new(
-            Vector4::new(scalar, 0.0, 0.0, 0.0),
-            Vector4::new(0.0, scalar, 0.0, 0.0),
-            Vector4::new(0.0, 0.0, scalar, 0.0),
-            Vector4::new(0.0, 0.0, 0.0, scalar),
+            Vector4::new(v.x, T::zero(), T::zero(), T::zero()),
+            Vector4::new(T::zero(), v.y, T::zero(), T::zero()),
+            Vector4::new(T::zero(), T::zero(), v.z, T::zero()),
+            Vector4::new(T::zero(), T::zero(), T::zero(), T::one()),
         )
     }
 }
@@ -380,7 +429,6 @@ mod tests {
     fn matrix2_mul_scalar() {
         let m = Matrix2::new(Vector2::new(1.0, 2.0), Vector2::new(3.0, 4.0));
         assert_eq!(m * 2.0, Matrix2::new(Vector2::new(2.0, 4.0), Vector2::new(6.0, 8.0)));
-        assert_eq!(2.0 * m, Matrix2::new(Vector2::new(2.0, 4.0), Vector2::new(6.0, 8.0)));
     }
 
     #[test]
@@ -404,7 +452,7 @@ mod tests {
     fn matrix2_inverse() {
         let mat = Matrix2::new(Vector2::new(1.0, 2.0), Vector2::new(3.0, 4.0));
         if let Some(invmat) = Matrix2::inverse(&mat) {
-            assert_eq!(mat * invmat, 1.0.into());
+            assert_eq!(mat * invmat, Matrix2::identity());
         } else {
             assert!(false)
         }
@@ -458,7 +506,6 @@ mod tests {
     fn matrix3_mul_scalar() {
         let m = Matrix3::new(Vector3::new(1.0, 2.0, 3.0), Vector3::new(4.0, 5.0, 6.0), Vector3::new(7.0, 8.0, 9.0));
         assert_eq!(m * 2.0, Matrix3::new(Vector3::new(2.0, 4.0, 6.0), Vector3::new(8.0, 10.0, 12.0), Vector3::new(14.0, 16.0, 18.0)));
-        assert_eq!(2.0 * m, Matrix3::new(Vector3::new(2.0, 4.0, 6.0), Vector3::new(8.0, 10.0, 12.0), Vector3::new(14.0, 16.0, 18.0)));
     }
 
     #[test]
@@ -482,7 +529,7 @@ mod tests {
     fn matrix3_inverse() {
         let mat = Matrix3::new(Vector3::new(1.0, 0.0, -2.0), Vector3::new(-1.0, -2.0, -3.0), Vector3::new(1.0, 1.0, 0.0));
         if let Some(invmat) = Matrix3::inverse(&mat) {
-            assert_eq!(mat * invmat, 1.0.into());
+            assert_eq!(mat * invmat, Matrix3::identity());
         } else {
             assert!(false)
         }
@@ -547,7 +594,6 @@ mod tests {
     fn matrix4_mul_scalar() {
         let m = Matrix4::new(Vector4::new(1.0, 2.0, 3.0, 4.0), Vector4::new(5.0, 6.0, 7.0, 8.0), Vector4::new(9.0, 10.0, 11.0, 12.0), Vector4::new(13.0, 14.0, 15.0, 16.0));
         assert_eq!(m * 2.0, Matrix4::new(Vector4::new(2.0, 4.0, 6.0, 8.0), Vector4::new(10.0, 12.0, 14.0, 16.0), Vector4::new(18.0, 20.0, 22.0, 24.0), Vector4::new(26.0, 28.0, 30.0, 32.0)));
-        assert_eq!(2.0 * m, Matrix4::new(Vector4::new(2.0, 4.0, 6.0, 8.0), Vector4::new(10.0, 12.0, 14.0, 16.0), Vector4::new(18.0, 20.0, 22.0, 24.0), Vector4::new(26.0, 28.0, 30.0, 32.0)));
     }
 
     #[test]
@@ -571,7 +617,7 @@ mod tests {
     fn matrix4_inverse() {
         let mat = Matrix4::new(Vector4::new(1.0, 0.0, 2.0, 2.0), Vector4::new(0.0, 2.0, 1.0, 0.0), Vector4::new(0.0, 1.0, 0.0, 1.0), Vector4::new(1.0, 2.0, 1.0, 4.0));
         if let Some(invmat) = Matrix4::inverse(&mat) {
-            assert_eq!(mat * invmat, 1.0.into());
+            assert_eq!(mat * invmat, Matrix4::identity());
         } else {
             assert!(false)
         }
