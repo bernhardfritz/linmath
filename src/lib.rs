@@ -5,8 +5,8 @@ extern crate approx;
 extern crate approx;
 extern crate num_traits;
 
-pub use vector::*;
 pub use matrix::*;
+pub use vector::*;
 
-mod vector;
 mod matrix;
+mod vector;

@@ -1,6 +1,6 @@
-use std::ops::{Add, AddAssign, Sub, SubAssign, Mul, MulAssign};
 use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use num_traits::Float;
+use std::ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign};
 
 macro_rules! sum {
     ($h:expr) => ($h);
@@ -9,6 +9,7 @@ macro_rules! sum {
 
 macro_rules! generate_vector_n {
     ($VectorN: ident, $($field: ident),+) => {
+        #[repr(C)]
         #[derive(Copy, Clone, Debug, PartialEq)]
         pub struct $VectorN<T: Float> {
             $(pub $field: T),+
@@ -38,6 +39,16 @@ macro_rules! generate_vector_n {
             #[inline]
             pub fn dot(a: &$VectorN<T>, b: &$VectorN<T>) -> T {
                 sum!($(a.$field * b.$field),+)
+            }
+
+            #[inline]
+            pub fn length(v: &$VectorN<T>) -> T {
+                $VectorN::dot(v, v).sqrt()
+            }
+
+            #[inline]
+            pub fn normalize(v: &$VectorN<T>) -> $VectorN<T> {
+                *v * (T::one() / $VectorN::length(v))
             }
         }
 
@@ -208,6 +219,18 @@ mod tests {
     }
 
     #[test]
+    fn vector2_length() {
+        let v = Vector2::new(1.0, 0.0);
+        assert_eq!(Vector2::length(&v), 1.0);
+    }
+
+    #[test]
+    fn vector2_normalize() {
+        let v = Vector2::new(2.0, 0.0);
+        assert_eq!(Vector2::normalize(&v), Vector2::new(1.0, 0.0))
+    }
+
+    #[test]
     fn vector3_add() {
         let a = Vector3::new(1.0, 2.0, 3.0);
         let b = Vector3::new(4.0, 5.0, 6.0);
@@ -243,7 +266,6 @@ mod tests {
         assert_eq!(v * 2.0, Vector3::new(2.0, 4.0, 6.0));
     }
 
-
     #[test]
     fn vector3_mul_assign() {
         let mut v = Vector3::new(1.0, 2.0, 3.0);
@@ -256,6 +278,18 @@ mod tests {
         let a = Vector3::new(1.0, 2.0, 3.0);
         let b = Vector3::new(4.0, 5.0, 6.0);
         assert_eq!(Vector3::dot(&a, &b), 32.0);
+    }
+
+    #[test]
+    fn vector3_length() {
+        let v = Vector3::new(1.0, 0.0, 0.0);
+        assert_eq!(Vector3::length(&v), 1.0);
+    }
+
+    #[test]
+    fn vector3_normalize() {
+        let v = Vector3::new(2.0, 0.0, 0.0);
+        assert_eq!(Vector3::normalize(&v), Vector3::new(1.0, 0.0, 0.0))
     }
 
     #[test]
@@ -313,5 +347,17 @@ mod tests {
         let a = Vector4::new(1.0, 2.0, 3.0, 4.0);
         let b = Vector4::new(5.0, 6.0, 7.0, 8.0);
         assert_eq!(Vector4::dot(&a, &b), 70.0);
+    }
+
+    #[test]
+    fn vector4_length() {
+        let v = Vector4::new(1.0, 0.0, 0.0, 0.0);
+        assert_eq!(Vector4::length(&v), 1.0);
+    }
+
+    #[test]
+    fn vector4_normalize() {
+        let v = Vector4::new(2.0, 0.0, 0.0, 0.0);
+        assert_eq!(Vector4::normalize(&v), Vector4::new(1.0, 0.0, 0.0, 0.0))
     }
 }

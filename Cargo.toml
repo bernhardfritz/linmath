@@ -4,9 +4,6 @@ version = "0.1.0"
 authors = ["Bernhard Fritz <bernhard.e.fritz@gmail.com>"]
 edition = "2018"
 
-[lib]
-crate-type = ["cdylib"]
-
 [dependencies]
 approx = "0.3.2"
 num-traits = "0.2"
