@@ -3,6 +3,8 @@ name = "linmath"
 version = "0.0.1"
 authors = ["Bernhard Fritz <bernhard.e.fritz@gmail.com>"]
 edition = "2018"
+description = "A linear algebra and mathematics library for computer graphics."
+license = "MIT"
 
 [dependencies]
 approx = "0.3.2"
