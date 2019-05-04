@@ -518,21 +518,26 @@ impl<T: Float> Matrix4<T> {
                 two / (right - left),
                 T::zero(),
                 T::zero(),
-                -(right + left) / (right - left),
+                T::zero(),
             ),
             Vector4::new(
                 T::zero(),
                 two / (top - bottom),
                 T::zero(),
-                -(top + bottom) / (top - bottom),
+                T::zero(),
             ),
             Vector4::new(
                 T::zero(),
                 T::zero(),
                 -two / (far - near),
-                -(far + near) / (far - near),
+                T::zero(),
             ),
-            Vector4::new(T::zero(), T::zero(), T::zero(), T::one()),
+            Vector4::new(
+                -(right + left) / (right - left),
+                -(top + bottom) / (top - bottom),
+                -(far + near) / (far - near),
+                T::one()
+            ),
         )
     }
 
